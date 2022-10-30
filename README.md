@@ -3,4 +3,4 @@
 
 ## Organisation
 
-Les comptes rendus sont disponibles dans le répertoire docs/CRs/ ou en cliquant [ici](https://github.com/AurelienBesnier/Projet-HAI927/docs/CRs).
+Les comptes rendus sont disponibles dans le répertoire docs/CRs/ ou en cliquant [ici](https://github.com/AurelienBesnier/Projet-HAI927/tree/main/docs/CRs).
