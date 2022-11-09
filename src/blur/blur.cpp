@@ -18,6 +18,7 @@ void mouse_click(int event, int x, int y, int flags, void *param)
         case EVENT_LBUTTONUP:
             p2.x = x;
             p2.y = y;
+            if(p1 == p2) return;
             Rect r(p1, p2);
             GaussianBlur(img(r), img(r), {51,51}, 0);
             cv::imshow("Img", img);
