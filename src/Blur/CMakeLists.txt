@@ -14,5 +14,4 @@ set_target_properties(${PROJECT_NAME}
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
 )
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
-target_link_libraries(Blur DisplaySystem)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} DisplaySystem)
