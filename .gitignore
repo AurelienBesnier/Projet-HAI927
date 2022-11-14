@@ -2,4 +2,4 @@
 **/build/
 .project
 .cproject
-**/lfw
+**/lfw/**/*.jpg
