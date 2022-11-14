@@ -3,3 +3,7 @@
 .project
 .cproject
 **/lfw/**/*.jpg
+
+*.tgz
+*.zip
+*.tar
