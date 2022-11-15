@@ -22,5 +22,5 @@ Pour la détection de visages, nous utilisons la base de données [LFW (Labeled 
 
 ```
 wget https://vis-www.cs.umass.edu/lfw/lfw.tgz
-tar -xzf lfw.tgz
+tar -xzf lfw.tgz -C ../
 ```
