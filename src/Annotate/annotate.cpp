@@ -79,7 +79,6 @@ void processImage(std::filesystem::path path)
     }
     std::ofstream faceloc(faceloc_path);
     faceloc << rect->x << ' ' << rect->y << ' ' << rect->width << ' ' << rect->height << std::endl;
-    //std::cout << faceloc_path << std::endl;
 }
 
 void processFile(std::filesystem::path folder, std::istream& listing)
@@ -104,17 +103,6 @@ void processFile(std::filesystem::path folder, std::istream& listing)
         }
     }
 }
-
-/*void impl::doProcess(std::string_view file, std::function<void(cv::Mat&, cv::Rect)>& func)
-{
-    img = cv::imread(std::string(file));
-    
-    cv::imshow("Img", img);
-    cv::setMouseCallback("Img", mouse_click, &func);
-    while(cv::waitKey() != 27)
-    {
-    }
-}*/
 
 int main(int argc, char* argv[])
 {
