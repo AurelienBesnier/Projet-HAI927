@@ -16,6 +16,4 @@ set_target_properties(${PROJECT_NAME}
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
 )
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
-get_target_property(FOLDER ${PROJECT_NAME} RUNTIME_OUTPUT_DIRECTORY)
-configure_file(haarcascade_frontalface_alt.xml "${FOLDER}/haarcascade_frontalface_alt.xml" COPYONLY)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} Faceloc)
