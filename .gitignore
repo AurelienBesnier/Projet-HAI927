@@ -7,3 +7,5 @@
 *.tgz
 *.zip
 *.tar
+
+.ipynb_checkpoints/
