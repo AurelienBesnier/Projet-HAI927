@@ -58,7 +58,7 @@ namespace
         return classifier;
     }
 
-    cv::Rect generateFaceLoc(const cv::Mat& img)
+    cv::Rect generateFaceLoc(const cv::Mat& img, bool auto_annotate)
     {
         cv::Mat img_gray; cv::cvtColor(img, img_gray, cv::COLOR_BGR2GRAY);
         cv::equalizeHist(img_gray, img_gray);
@@ -68,6 +68,8 @@ namespace
         
         std::optional<cv::Rect> rect;
         if(faces.size() == 1) rect = faces.front();
+
+        if(auto_annotate && rect) return *rect;
         while(!rect || !validateFace(img, *rect))
         {
             selected = false;
@@ -85,7 +87,7 @@ namespace
     }
 }
 
-std::pair<cv::Mat, cv::Rect> loadFaceWithLoc(std::filesystem::path path)
+std::pair<cv::Mat, cv::Rect> loadFaceWithLoc(std::filesystem::path path, bool auto_annotate)
 {
     std::pair<cv::Mat, cv::Rect> result;
     auto& [img, loc] = result;
@@ -98,7 +100,7 @@ std::pair<cv::Mat, cv::Rect> loadFaceWithLoc(std::filesystem::path path)
     }
     else
     {
-        loc = generateFaceLoc(img);
+        loc = generateFaceLoc(img, auto_annotate);
         std::ofstream faceloc(path);
         faceloc << loc.x << ' ' << loc.y << ' ' << loc.width << ' ' << loc.height << '\n';
     }
