@@ -5,12 +5,12 @@
 
 # ### Imports
 
-# In[ ]:
+# In[1]:
 
 
 import os
 #Disable GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+#os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +23,7 @@ from tensorflow.keras import losses
 from tensorflow.keras import optimizers
 from tensorflow.keras import metrics
 from tensorflow.keras import Model
-from tensorflow.keras.applications import resnet
+from tensorflow.keras.applications import inception_v3
 
 
 target_shape = (250, 250)
@@ -31,7 +31,7 @@ target_shape = (250, 250)
 
 # #### Importing dataset
 
-# In[ ]:
+# In[2]:
 
 
 cache_dir = Path().resolve() / "../../lfw"
@@ -39,7 +39,7 @@ cache_dir = Path().resolve() / "../../lfw"
 print(cache_dir)
 
 
-# In[ ]:
+# In[3]:
 
 
 def preprocess_image(filename):
@@ -68,7 +68,7 @@ def preprocess_triplets(anchor, positive, negative):
     )
 
 
-# In[ ]:
+# In[4]:
 
 
 def buildImageName(name, index):
@@ -108,34 +108,11 @@ val_dataset = val_dataset.batch(32, drop_remainder=False)
 val_dataset = val_dataset.prefetch(8)
 
 
-# In[ ]:
-
-
-def visualize(anchor, positive, negative):
-    """Visualize a few triplets from the supplied batches."""
-
-    def show(ax, image):
-        ax.imshow(image)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-
-    fig = plt.figure(figsize=(9, 9))
-
-    axs = fig.subplots(3, 3)
-    for i in range(3):
-        show(axs[i, 0], anchor[i])
-        show(axs[i, 1], positive[i])
-        show(axs[i, 2], negative[i])
-
-
-visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
-
-
 # ## Setting up the model
 
 # ### Generator model
 
-# In[ ]:
+# In[6]:
 
 
 base_cnn = tf.keras.applications.InceptionV3(
@@ -159,7 +136,7 @@ for layer in base_cnn.layers:
 
 # ### Siamese network
 
-# In[ ]:
+# In[7]:
 
 
 class DistanceLayer(layers.Layer):
@@ -183,9 +160,9 @@ positive_input = layers.Input(name="positive", shape=target_shape + (3,))
 negative_input = layers.Input(name="negative", shape=target_shape + (3,))
 
 distances = DistanceLayer()(
-    embedding(tf.keras.applications.inception_v3.preprocess_input(anchor_input)),
-    embedding(tf.keras.applications.inception_v3.preprocess_input(positive_input)),
-    embedding(tf.keras.applications.inception_v3.preprocess_input(negative_input)),
+    embedding(inception_v3.preprocess_input(anchor_input)),
+    embedding(inception_v3.preprocess_input(positive_input)),
+    embedding(inception_v3.preprocess_input(negative_input)),
 )
 
 siamese_network = Model(
@@ -193,7 +170,7 @@ siamese_network = Model(
 )
 
 
-# In[ ]:
+# In[8]:
 
 
 class SiameseModel(Model):
@@ -262,12 +239,24 @@ class SiameseModel(Model):
         return [self.loss_tracker]
 
 
-# In[ ]:
+# In[10]:
 
 
 siamese_model = SiameseModel(siamese_network)
 siamese_model.compile(optimizer=optimizers.Adam(0.0001), weighted_metrics=["loss"])
 siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
+
+
+# In[ ]:
+
+
+cosine_similarity = metrics.CosineSimilarity()
+
+positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
+print("Positive similarity:", positive_similarity.numpy())
+
+negative_similarity = cosine_similarity(anchor_embedding, negative_embedding)
+print("Negative similarity", negative_similarity.numpy())
 
 
 # ### Saving the model
@@ -281,5 +270,5 @@ embedding.save("model_trained")
 # In[ ]:
 
 
-
+reconstructed_model = tf.keras.models.load_model("model_trained")
 
