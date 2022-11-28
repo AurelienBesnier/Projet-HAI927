@@ -27,4 +27,4 @@ tar -xzf lfw.tgz -C ../
 
 Il y a aussi divers outils pour manipuler cette base de données (Annotate, Faceloc, GenDataSet,...)
 
-Pour la génération d'un modèle de réseau siamois, le notebook `Classification/Classification.ipynb` est disponible ainsi qu'une version script.
+Pour la génération d'un modèle de réseau siamois, le notebook [`Classification/Classification.ipynb`](https://github.com/AurelienBesnier/Projet-HAI927/blob/main/src/Classification/Classification.ipynb) est disponible ainsi qu'une version script.
