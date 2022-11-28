@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
         size=atoi(argv[3]);
         triplets = genFromPairs(folder, argv[2]);
     }
-    std::cout << triplets.size() << std::endl;
+    std::cout << size << std::endl;
     
     unsigned int cpt = 0;
     bool pos = true;
