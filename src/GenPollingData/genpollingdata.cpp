@@ -88,6 +88,7 @@ int main(int argc, char* argv[])
     unsigned int cpt = 0;
     bool pos = true;
     srand (time(NULL));
+    std::shuffle(std::begin(triplets),std::end(triplets),std::default_random_engine());
     for(const Triplet& triplet : triplets)
     {
         if(cpt++ >= atoi(argv[3]))
