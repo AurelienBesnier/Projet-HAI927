@@ -87,12 +87,13 @@ int main(int argc, char* argv[])
     
     unsigned int cpt = 0;
     bool pos = true;
+    srand (time(NULL));
     for(const Triplet& triplet : triplets)
     {
         if(cpt++ >= atoi(argv[3]))
             break;
-        else if (cpt == size/2)
-            pos = false;
+        else if (rand() % size > size/2)
+            pos = !pos;
 
         if(pos)
         {
