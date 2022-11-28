@@ -57,6 +57,71 @@ std::vector<Triplet> genFromPairs(std::filesystem::path folder, std::filesystem:
     return result;
 }
 
+template<typename T>
+T moveAndPopLast(std::vector<T>& v)
+{
+    T temp = std::move(v.back());
+    v.pop_back();
+    return temp; //Copy ellision guaranteed
+}
+
+std::vector<Triplet> genNTriplets(std::filesystem::path folder, int n)
+{
+    std::mt19937 rng(std::random_device{}());
+
+    std::vector<Triplet> result(n);
+    std::vector<Item> people_1;
+    std::vector<std::pair<std::string, std::vector<int>>> people_n;
+    for(auto entry : std::filesystem::directory_iterator(folder))
+    {
+        if(!entry.is_directory()) continue;
+        int count = 0;
+        for(auto file : std::filesystem::directory_iterator(entry))
+        {
+            if(file.path().extension() == ".jpg")
+            {
+                ++count;
+            }
+        }
+        if(count == 1) people_1.emplace_back(entry.path().filename(), "1");
+        else
+        {
+            std::vector<int> v(count);
+            std::iota(v.begin(), v.end(), 1);
+            std::ranges::shuffle(v, rng);
+            if(v.size() > 5) v.resize(5); //Prevent overfitting on one person
+            people_n.emplace_back(entry.path().filename(), std::move(v));
+        }
+    }
+    std::ranges::shuffle(people_1, rng);
+    std::ranges::shuffle(people_n, rng);
+
+    auto takeOneFromPeopleN = [&]()
+    {
+        Item result;
+        result.name = people_n.back().first;
+        result.index = std::to_string(moveAndPopLast(people_n.back().second));
+        if(people_n.back().second.size() < 2)
+        {
+            auto [name, indexes] = moveAndPopLast(people_n);
+            if(indexes.size() > 0) people_1.emplace_back(std::move(name), std::to_string(indexes.back()));
+        }
+        return result;
+    };
+
+    for(auto& [anchor, positive, negative] : result)
+    {
+        if(!people_1.empty()) negative = moveAndPopLast(people_1);
+        else negative = takeOneFromPeopleN();
+
+        anchor.name = people_n.back().first;
+        anchor.index = std::to_string(moveAndPopLast(people_n.back().second));
+        positive = takeOneFromPeopleN();
+    }
+
+    return result;
+}
+
 bool isNumber(std::string_view s)
 {
     for(char c : s) if(!isdigit(c)) return false;
@@ -70,8 +135,7 @@ int main(int argc, char* argv[])
     std::vector<Triplet> triplets;
     if(isNumber(argv[2]))
     {
-        //TODO : implement pulling random triplets
-        return EXIT_FAILURE;
+        triplets = genNTriplets(folder, std::stoi(argv[2]));
     }
     else
     {
