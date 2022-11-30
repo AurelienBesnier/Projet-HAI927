@@ -7,6 +7,8 @@
 #include <algorithm>
 
 #include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include "faceloc.h"
 
 void blur(cv::Mat& img, cv::Rect roi, int radius)
 {
@@ -32,20 +34,101 @@ void blackhead(cv::Mat& img, cv::Rect roi)
     img(roi) *= 0;
 }
 
-cv::Rect getRoiFromFaceloc(std::filesystem::path file, std::filesystem::path faceloc_file, int obscuration_method)
+void noop(cv::Mat& img, cv::Rect roi)
 {
-    // TODO: Obscure the file with the corresponding faceloc and method
-    // if method = 1 - > blur
-    // if method = 2 - > pixel
-    // if method = 3 - > blackhead
-  
+}
+
+bool isNumber(std::string_view s)
+{
+    for(char c : s) if(!isdigit(c)) return false;
+    return !s.empty();
+}
+
+namespace fs = std::filesystem;
+
+void applyRandomMethod(fs::path from, fs::path to, const std::vector<std::function<void(cv::Mat&, cv::Rect)>>& methods)
+{
+    static std::mt19937 gen(std::random_device{}());
+    static std::uniform_int_distribution dist;
+    auto [img, loc] = loadFaceWithLoc(from);
+    methods[dist(gen, std::uniform_int_distribution<int>::param_type{0, methods.size()-1})](img, loc);
+    cv::imwrite(to, img);
+}
+
+void generateObscurations(fs::path filename, fs::path from_folder, fs::path to_folder, const std::vector<std::function<void(cv::Mat&, cv::Rect)>>& methods)
+{
+    std::ifstream file(filename);
+    std::string count;
+    file >> count; file.ignore(std::numeric_limits<std::streamsize>::max(), file.widen('\n'));
+    std::cout << count << '\n';
+    int id = 0;
+    std::string val;
+    while(getline(file, val) && !val.empty())
+    {
+        std::string local_id = std::to_string(id++);
+        local_id.insert(0, count.size() - local_id.size(), '0');
+
+        std::stringstream line(std::move(val)); line.exceptions(std::ios::badbit | std::ios::failbit);
+        std::string last_name;
+        line >> last_name;
+        std::string index;
+        line >> index;
+        index.insert(0, 4 - index.size(), '0');
+        fs::copy_file(from_folder / last_name / (last_name + '_' + index + ".jpg"), to_folder / (local_id + "_1.jpg"), fs::copy_options::overwrite_existing);
+
+        bool same = true;
+        line >> val;
+        if(!isNumber(val))
+        {
+            same = val == last_name;
+            last_name = std::move(val);
+            line >> val;
+        }
+        index = std::move(val);
+        index.insert(0, 4 - index.size(), '0');
+        applyRandomMethod(from_folder / last_name / (last_name + '_' + index + ".jpg"), to_folder / (local_id + "_2.jpg"), methods);
+        std::cout << same << '\n';
+    }
 }
 
 int main(int argc, char* argv[])
 {
-
-  if(argc!=3) return EXIT_FAILURE;
-
-
-  return EXIT_SUCCESS;
+    if(argc<5) return EXIT_FAILURE;
+    std::unordered_map<std::string, int> method_names{
+        {"noop", 1},
+        {"blur", 2},
+        {"pixel",3},
+        {"blackhead",4}
+    };
+    std::vector<std::function<void(cv::Mat&, cv::Rect)>> methods;
+    int argi = 4;
+    auto nextarg = [&]()
+    {
+        if(argi == argc) throw std::invalid_argument("Wrong number of arguments");
+        return argv[argi++];
+    };
+    while(argi < argc)
+    {
+        switch(method_names[nextarg()])
+        {
+            using namespace std::placeholders;
+        case 1:
+            methods.emplace_back(noop);
+            break;
+        case 2:
+            methods.emplace_back(std::bind(blur,_1,_2,std::stoi(nextarg())));
+            break;
+        case 3:
+            methods.emplace_back(std::bind(pixel,_1,_2,std::stoi(nextarg())));
+            break;
+        case 4:
+            methods.emplace_back(blackhead);
+            break;
+        default:
+            throw std::invalid_argument("Unknown method name");
+        }
+    }
+    generateObscurations(argv[1], argv[2], argv[3], methods);
+  
+    return EXIT_SUCCESS;
 }
