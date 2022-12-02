@@ -22,6 +22,9 @@ private slots:
     void on_evaluate_button_pressed();
     void on_zoom_in_action_triggered();
     void on_zoom_out_action_triggered();
+    void on_blur_button_pressed();
+    void on_pixel_button_pressed();
+    void on_blackhead_button_pressed();
 
 private:
     QPoint getImageCoord(QMouseEvent* event) const;
@@ -30,8 +33,8 @@ private:
     void showSelection();
 
     cv::Mat _img;
-    cv::Rect _selection;
-    QPoint _last_click;
+    cv::Rect _selection{};
+    QPoint _last_click{};
     float _scale = 1;
 };
 
