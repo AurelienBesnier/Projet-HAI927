@@ -8,4 +8,4 @@
 |[CR3](https://github.com/AurelienBesnier/Projet-HAI927/tree/main/docs/CRs/CR3.pdf) |  07/11 - 13/11|
 |[CR4](https://github.com/AurelienBesnier/Projet-HAI927/tree/main/docs/CRs/CR4.pdf) |  14/11 - 20/11|
 |[CR5](https://github.com/AurelienBesnier/Projet-HAI927/tree/main/docs/CRs/CR5.pdf) |  21/11 - 27/11|
-|[CR6](https://github.com/AurelienBesnier/Projet-HAI927/tree/main/docs/CRs/CR6.pdf) |  21/11 - 27/11|
+|[CR6](https://github.com/AurelienBesnier/Projet-HAI927/tree/main/docs/CRs/CR6.pdf) |  28/11 - 04/12|
