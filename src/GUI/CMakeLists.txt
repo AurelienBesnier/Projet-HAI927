@@ -5,10 +5,12 @@ set(PROJECT_SOURCES
     main.cpp
     MainWindow.cpp
     MainWindow.ui
+    Commands.cpp
 )
 
 set(PROJECT_HEADERS
     MainWindow.h
+    Commands.h
 )
 
 find_package( OpenCV REQUIRED )

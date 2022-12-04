@@ -79,7 +79,13 @@
     <addaction name="zoom_in_action"/>
     <addaction name="zoom_out_action"/>
    </widget>
+   <widget class="QMenu" name="edit_menu">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="edit_menu"/>
    <addaction name="menuWindow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QUndoStack>
 #include <opencv2/core/mat.hpp>
 #include "ui_MainWindow.h"
 
@@ -11,6 +12,8 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
     
 public:
     MainWindow();
+    const cv::Mat& image() const;
+    void setImage(cv::Mat img);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -29,10 +32,10 @@ private slots:
 
 private:
     QPoint getImageCoord(QMouseEvent* event) const;
-    void updateDisplay(const cv::Mat& img);
+    void updateDisplay();
     void updateScale();
-    void showSelection();
 
+    QUndoStack* _undo_stack;
     cv::Mat _img;
     cv::Rect _selection{};
     QPoint _last_click{};

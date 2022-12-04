@@ -4,9 +4,11 @@
 #include <QMouseEvent>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include "Commands.h"
 
-
+using namespace std::placeholders;
 namespace fs = std::filesystem;
+
 
 namespace
 {
@@ -38,8 +40,30 @@ namespace
 MainWindow::MainWindow()
 {
     setupUi(this);
+
+    //Remove intermediate widget in scroll area
     image_label->setParent(nullptr);
     scroll_area->setWidget(image_label);
+    
+    //Build undo system
+    _undo_stack = new QUndoStack(this);
+    QAction* action = _undo_stack->createUndoAction(this, tr("Undo"));
+    action->setShortcuts(QKeySequence::Undo);
+    edit_menu->addAction(action);
+    action = _undo_stack->createRedoAction(this, tr("Redo"));
+    action->setShortcuts(QKeySequence::Redo);
+    edit_menu->addAction(action);
+}
+
+const cv::Mat& MainWindow::image() const
+{
+    return _img;
+}
+
+void MainWindow::setImage(cv::Mat img)
+{
+    _img = std::move(img);
+    updateDisplay();
 }
 
 void MainWindow::mousePressEvent(QMouseEvent* event)
@@ -54,7 +78,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
     auto coords = getImageCoord(event);
     std::tie(_selection.x, _selection.width)  = std::minmax(_last_click.x(), coords.x()); _selection.width -= _selection.x;
     std::tie(_selection.y, _selection.height) = std::minmax(_last_click.y(), coords.y()); _selection.height -= _selection.y;
-    showSelection();
+    updateDisplay();
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent* event)
@@ -68,7 +92,7 @@ void MainWindow::on_open_action_triggered()
     fs::path path = QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.png *.jpg *.bmp)")).toStdString();
     if(path.empty()) return;
     _img = cv::imread(path, cv::IMREAD_COLOR);
-    updateDisplay(_img);
+    updateDisplay();
     image_label->adjustSize();
     _scale = 1;
     save_action->setEnabled(true);
@@ -102,20 +126,17 @@ void MainWindow::on_zoom_out_action_triggered()
 
 void MainWindow::on_blur_button_pressed()
 {
-    blur(_img, _selection, blur_slider->value());
-    showSelection();
+    _undo_stack->push(new FilterCommand(this, std::bind(blur, _1, _selection, blur_slider->value())));
 }
 
 void MainWindow::on_pixel_button_pressed()
 {
-    pixel(_img, _selection, pixel_slider->value());
-    showSelection();
+    _undo_stack->push(new FilterCommand(this, std::bind(pixel, _1, _selection, pixel_slider->value())));
 }
 
 void MainWindow::on_blackhead_button_pressed()
 {
-    blackhead(_img, _selection);
-    showSelection();
+    _undo_stack->push(new FilterCommand(this, std::bind(blackhead, _1, _selection)));
 }
 
 QPoint MainWindow::getImageCoord(QMouseEvent* event) const
@@ -123,19 +144,14 @@ QPoint MainWindow::getImageCoord(QMouseEvent* event) const
     return image_label->mapFrom(this, event->pos()) / _scale;
 }
 
-void MainWindow::updateDisplay(const cv::Mat& img)
+void MainWindow::updateDisplay()
 {
+    cv::Mat img = _img.clone();
+    cv::rectangle(img, _selection, cv::Scalar(0));
     image_label->setPixmap(QPixmap::fromImage(QImage{img.data, img.cols, img.rows, img.step, QImage::Format_BGR888}));
 }
 
 void MainWindow::updateScale()
 {
     image_label->resize(image_label->pixmap(Qt::ReturnByValue).size() * _scale);
-}
-
-void MainWindow::showSelection()
-{
-    cv::Mat img = _img.clone();
-    cv::rectangle(img, _selection, cv::Scalar(0));
-    updateDisplay(img);
 }
