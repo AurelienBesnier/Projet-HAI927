@@ -19,6 +19,7 @@ protected:
 
 private slots:
     void on_open_action_triggered();
+    void on_save_action_triggered();
     void on_evaluate_button_pressed();
     void on_zoom_in_action_triggered();
     void on_zoom_out_action_triggered();

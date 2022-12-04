@@ -65,11 +65,21 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 
 void MainWindow::on_open_action_triggered()
 {
-    fs::path path = QFileDialog::getOpenFileName(this, tr("Open Image"), ".", tr("Image Files (*.png *.jpg *.bmp)")).toStdString();
+    fs::path path = QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.png *.jpg *.bmp)")).toStdString();
+    if(path.empty()) return;
     _img = cv::imread(path, cv::IMREAD_COLOR);
     updateDisplay(_img);
     image_label->adjustSize();
     _scale = 1;
+    save_action->setEnabled(true);
+}
+
+void MainWindow::on_save_action_triggered()
+{
+    fs::path path = QFileDialog::getSaveFileName(this, tr("Save Image"), "", tr("Image Files (*.png *.jpg *.bmp)")).toStdString();
+    if(path.empty()) return;
+    if(!path.has_extension()) path.replace_extension(".png");
+    cv::imwrite(path, _img);
 }
 
 void MainWindow::on_evaluate_button_pressed()
