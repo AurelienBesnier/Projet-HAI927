@@ -45,17 +45,20 @@ bool isNumber(std::string_view s)
 }
 
 namespace fs = std::filesystem;
+using MethodSet = std::vector<std::pair<std::function<void(cv::Mat&, cv::Rect)>, std::string>>;
 
-void applyRandomMethod(fs::path from, fs::path to, const std::vector<std::function<void(cv::Mat&, cv::Rect)>>& methods)
+void applyRandomMethod(fs::path from, fs::path to, const MethodSet& methods)
 {
     static std::mt19937 gen(std::random_device{}());
     static std::uniform_int_distribution dist;
     auto [img, loc] = loadFaceWithLoc(from);
-    methods[dist(gen, std::uniform_int_distribution<int>::param_type{0, methods.size()-1})](img, loc);
+    auto& [method, name] = methods[dist(gen, std::uniform_int_distribution<int>::param_type{0, methods.size()-1})];
+    method(img, loc);
+    std::cout << name << '\n';
     cv::imwrite(to, img);
 }
 
-void generateObscurations(fs::path filename, fs::path from_folder, fs::path to_folder, const std::vector<std::function<void(cv::Mat&, cv::Rect)>>& methods)
+void generateObscurations(fs::path filename, fs::path from_folder, fs::path to_folder, const MethodSet& methods)
 {
     std::ifstream file(filename);
     std::string count;
@@ -86,21 +89,25 @@ void generateObscurations(fs::path filename, fs::path from_folder, fs::path to_f
         }
         index = std::move(val);
         index.insert(0, 4 - index.size(), '0');
+        std::cout << same << ' ';
         applyRandomMethod(from_folder / last_name / (last_name + '_' + index + ".jpg"), to_folder / (local_id + "_2.jpg"), methods);
-        std::cout << same << '\n';
     }
 }
 
 int main(int argc, char* argv[])
 {
-    if(argc<5) return EXIT_FAILURE;
+    if(argc<5)
+    {
+        std::cerr << "Usage : " << argv[0] << " dataset.txt from_folder to_folder method1 [param] method2 [param]...\n";
+        return EXIT_FAILURE;
+    }
     std::unordered_map<std::string, int> method_names{
         {"noop", 1},
         {"blur", 2},
         {"pixel",3},
         {"blackhead",4}
     };
-    std::vector<std::function<void(cv::Mat&, cv::Rect)>> methods;
+    MethodSet methods;
     int argi = 4;
     auto nextarg = [&]()
     {
@@ -109,20 +116,24 @@ int main(int argc, char* argv[])
     };
     while(argi < argc)
     {
-        switch(method_names[nextarg()])
+        std::string arg = nextarg();
+        std::string temp;
+        switch(method_names[arg])
         {
             using namespace std::placeholders;
         case 1:
-            methods.emplace_back(noop);
+            methods.emplace_back(noop, arg);
             break;
         case 2:
-            methods.emplace_back(std::bind(blur,_1,_2,std::stoi(nextarg())));
+            temp = nextarg();
+            methods.emplace_back(std::bind(blur,_1,_2,std::stoi(temp)), arg + ' ' + temp);
             break;
         case 3:
-            methods.emplace_back(std::bind(pixel,_1,_2,std::stoi(nextarg())));
+            temp = nextarg();
+            methods.emplace_back(std::bind(pixel,_1,_2,std::stoi(temp)), arg + ' ' + temp);
             break;
         case 4:
-            methods.emplace_back(blackhead);
+            methods.emplace_back(blackhead, arg);
             break;
         default:
             throw std::invalid_argument("Unknown method name");
