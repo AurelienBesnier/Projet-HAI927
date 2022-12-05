@@ -4,6 +4,7 @@
 #include <QMouseEvent>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include <fdeep/fdeep.hpp>
 #include "Commands.h"
 
 using namespace std::placeholders;
@@ -35,6 +36,15 @@ namespace
     {
         img(roi) *= 0;
     }
+
+    auto asTensor(const cv::Mat& img)
+    {
+        cv::Mat copy;
+        cv::resize(img, copy, cv::Size(250, 250));
+        return fdeep::tensor_from_bytes(copy.ptr(), copy.rows, copy.cols, copy.channels());
+    }
+
+    float squared(float x) { return x*x; }
 }
 
 MainWindow::MainWindow()
@@ -108,7 +118,22 @@ void MainWindow::on_save_action_triggered()
 
 void MainWindow::on_evaluate_button_pressed()
 {
-    //TODO
+    fs::path path = QFileDialog::getOpenFileName(this, tr("Open image for comparison"), "", tr("Image Files (*.png *.jpg *.bmp)")).toStdString();
+    if(path.empty()) return;
+    cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
+    const fdeep::model model = fdeep::load_model("model_trained.json");
+    const fdeep::tensor result[] = {
+        model.predict({asTensor(_img)})[0],
+        model.predict({asTensor(img)})[0],
+    };
+    float distance = 0;
+    int n = result[0].as_vector()->size();
+    for(int i = 0; i < n; ++i)
+    {
+        distance += squared((*result[0].as_vector())[i] - (*result[1].as_vector())[i]);
+    }
+    distance = sqrt(distance);
+    distance_label->setText(QString::number(distance));
 }
 
 void MainWindow::on_zoom_in_action_triggered()

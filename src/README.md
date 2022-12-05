@@ -4,6 +4,8 @@
 - cmake
 - opencv
 - make
+- libeigen3-dev
+- nlohmann-json3-dev
 
 ## Instructions
 
@@ -15,6 +17,8 @@ cd build
 cmake ..
 make -j
 ```
+
+Pour utiliser le modèle avec le système de GUI, il est nécessaire de le générer auparavent à l'aide du notebook, puis de le convertir à l'aide des scripts pythons téléchargés en dépendences pour placer le json à côté de l'exécutable.
 
 Il y aura alors 3 exécutables qui sont les outils d'obscuration développés `build/Blackhead/Blackhead`, `build/Blur/Blur` et `build/Pixel/Pixel`. Chacun de ces exécutables prends un argument qui doit être une image.
 
