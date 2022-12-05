@@ -47,7 +47,7 @@ bool isNumber(std::string_view s)
 namespace fs = std::filesystem;
 using MethodSet = std::vector<std::pair<std::function<void(cv::Mat&, cv::Rect)>, std::string>>;
 
-void applyRandomMethod(fs::path from, fs::path to, const MethodSet& methods)
+cv::Mat applyRandomMethod(fs::path from, const MethodSet& methods)
 {
     static std::mt19937 gen(std::random_device{}());
     static std::uniform_int_distribution dist;
@@ -55,7 +55,7 @@ void applyRandomMethod(fs::path from, fs::path to, const MethodSet& methods)
     auto& [method, name] = methods[dist(gen, std::uniform_int_distribution<int>::param_type{0, methods.size()-1})];
     method(img, loc);
     std::cout << name << '\n';
-    cv::imwrite(to, img);
+    return img;
 }
 
 void generateObscurations(fs::path filename, fs::path from_folder, fs::path to_folder, const MethodSet& methods)
@@ -77,7 +77,7 @@ void generateObscurations(fs::path filename, fs::path from_folder, fs::path to_f
         std::string index;
         line >> index;
         index.insert(0, 4 - index.size(), '0');
-        fs::copy_file(from_folder / last_name / (last_name + '_' + index + ".jpg"), to_folder / (local_id + "_1.jpg"), fs::copy_options::overwrite_existing);
+        cv::Mat left = cv::imread(from_folder / last_name / (last_name + '_' + index + ".jpg"));
 
         bool same = true;
         line >> val;
@@ -90,7 +90,10 @@ void generateObscurations(fs::path filename, fs::path from_folder, fs::path to_f
         index = std::move(val);
         index.insert(0, 4 - index.size(), '0');
         std::cout << same << ' ';
-        applyRandomMethod(from_folder / last_name / (last_name + '_' + index + ".jpg"), to_folder / (local_id + "_2.jpg"), methods);
+        cv::Mat right = applyRandomMethod(from_folder / last_name / (last_name + '_' + index + ".jpg"), methods);
+        cv::Mat img;
+        cv::hconcat(left, right, img);
+        cv::imwrite(to_folder / (local_id + ".jpg"), img);
     }
 }
 
