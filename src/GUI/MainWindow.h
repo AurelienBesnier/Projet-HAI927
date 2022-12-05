@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QUndoStack>
 #include <opencv2/core/mat.hpp>
+#include <fdeep/fdeep.hpp>
+#include <future>
+#include <optional>
 #include "ui_MainWindow.h"
 
 class MainWindow : public QMainWindow, private Ui::MainWindow
@@ -29,16 +32,24 @@ private slots:
     void on_blur_button_pressed();
     void on_pixel_button_pressed();
     void on_blackhead_button_pressed();
+    void handleModelLoaded();
+
+signals:
+    void modelLoaded(); //Qt's signal system handles thread communication for us
 
 private:
+    fdeep::model loadModel();
     QPoint getImageCoord(QMouseEvent* event) const;
     void updateDisplay();
     void updateScale();
+    void checkEvaluateButton();
 
     QUndoStack* _undo_stack;
     cv::Mat _img;
     cv::Rect _selection{};
     QPoint _last_click{};
+    std::future<fdeep::model> _model_future;
+    std::optional<fdeep::model> _model;
     float _scale = 1;
 };
 

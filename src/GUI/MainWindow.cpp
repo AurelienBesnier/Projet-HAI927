@@ -4,7 +4,6 @@
 #include <QMouseEvent>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
-#include <fdeep/fdeep.hpp>
 #include "Commands.h"
 
 using namespace std::placeholders;
@@ -45,6 +44,16 @@ namespace
     }
 
     float squared(float x) { return x*x; }
+
+    template<typename F>
+    struct RaiiCall
+    {
+        F&& func;
+        ~RaiiCall()
+        {
+            func();
+        }
+    };
 }
 
 MainWindow::MainWindow()
@@ -63,6 +72,30 @@ MainWindow::MainWindow()
     action = _undo_stack->createRedoAction(this, tr("Redo"));
     action->setShortcuts(QKeySequence::Redo);
     edit_menu->addAction(action);
+
+    statusBar()->showMessage("Loading model...");
+    connect(this, SIGNAL(modelLoaded()), this, SLOT(handleModelLoaded()));
+    _model_future = std::async(std::launch::async, &MainWindow::loadModel, this);
+}
+
+fdeep::model MainWindow::loadModel()
+{
+    RaiiCall rc{[&](){ emit modelLoaded(); }};
+    return fdeep::load_model("model_trained.json");
+}
+
+void MainWindow::handleModelLoaded()
+{
+    try
+    {
+        _model = _model_future.get();
+        statusBar()->showMessage("Model loaded!");
+        checkEvaluateButton();
+    }
+    catch(std::exception& e)
+    {
+        statusBar()->showMessage(QString("Unable to load model : ") + e.what());
+    }
 }
 
 const cv::Mat& MainWindow::image() const
@@ -106,6 +139,7 @@ void MainWindow::on_open_action_triggered()
     image_label->adjustSize();
     _scale = 1;
     save_action->setEnabled(true);
+    checkEvaluateButton();
 }
 
 void MainWindow::on_save_action_triggered()
@@ -121,10 +155,9 @@ void MainWindow::on_evaluate_button_pressed()
     fs::path path = QFileDialog::getOpenFileName(this, tr("Open image for comparison"), "", tr("Image Files (*.png *.jpg *.bmp)")).toStdString();
     if(path.empty()) return;
     cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
-    const fdeep::model model = fdeep::load_model("model_trained.json");
     const fdeep::tensor result[] = {
-        model.predict({asTensor(_img)})[0],
-        model.predict({asTensor(img)})[0],
+        _model->predict({asTensor(_img)})[0],
+        _model->predict({asTensor(img)})[0],
     };
     float distance = 0;
     int n = result[0].as_vector()->size();
@@ -179,4 +212,12 @@ void MainWindow::updateDisplay()
 void MainWindow::updateScale()
 {
     image_label->resize(image_label->pixmap(Qt::ReturnByValue).size() * _scale);
+}
+
+void MainWindow::checkEvaluateButton()
+{
+    if(_model && !_img.empty())
+    {
+        evaluate_button->setEnabled(true);
+    }
 }
