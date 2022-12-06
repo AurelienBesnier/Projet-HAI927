@@ -1,5 +1,14 @@
 #include <opencv2/imgproc.hpp>
-#include "DisplaySystem.h"
+
+void blackhead(cv::Mat& img, cv::Rect roi)
+{
+    img(roi) *= 0;
+}
+
+void blur(cv::Mat& img, cv::Rect roi, int radius)
+{
+    cv::GaussianBlur(img(roi), img(roi), {radius*2+1,radius*2+1}, 0);
+}
 
 void pixel(cv::Mat& img, cv::Rect roi, int size)
 {
@@ -13,13 +22,4 @@ void pixel(cv::Mat& img, cv::Rect roi, int size)
     cv::Mat smol(roi.height / (size + 1), roi.width / (size + 1), area.type());
     cv::resize(area, smol, smol.size(), 0, 0, cv::INTER_AREA);
     cv::resize(smol, area, area.size(), 0, 0, cv::INTER_NEAREST);
-}
-
-int main(int argc, char* argv[])
-{
-    if(argc != 2) throw 42;
-
-    processImage(argv[1], pixel, Param{"Size", 255});
-
-    return 0;
 }

@@ -1,10 +1,5 @@
-#include <opencv2/imgproc.hpp>
 #include "DisplaySystem.h"
-
-void blackhead(cv::Mat& img, cv::Rect roi)
-{
-    img(roi) *= 0;
-}
+#include "obscuration.h"
 
 int main(int argc, char* argv[])
 {

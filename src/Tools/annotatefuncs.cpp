@@ -1,6 +1,8 @@
+#include "tools.h"
 #include "faceloc.h"
-#include <fstream>
+#include <filesystem>
 #include <iostream>
+
 
 void processFile(std::filesystem::path folder, std::istream& listing)
 {
@@ -19,16 +21,8 @@ void processFile(std::filesystem::path folder, std::istream& listing)
         {
             token.insert(0, 4-token.length(), '0');
             std::filesystem::path img_path = folder / last_name / (last_name + '_' + token + ".jpg");
-            std::cout << img_path << '\n';
+            std::clog << img_path << '\n';
             loadFaceWithLoc(img_path);
         }
     }
-}
-
-int main(int argc, char* argv[])
-{
-    if(argc != 3) return -1;
-    std::ifstream file(argv[2]);
-    processFile(argv[1], file);
-    return 0;
 }

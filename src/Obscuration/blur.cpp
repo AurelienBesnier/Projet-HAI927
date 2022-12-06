@@ -1,10 +1,5 @@
-#include <opencv2/imgproc.hpp>
 #include "DisplaySystem.h"
-
-void blur(cv::Mat& img, cv::Rect roi, int radius)
-{
-    cv::GaussianBlur(img(roi), img(roi), {radius*2+1,radius*2+1}, 0);
-}
+#include "obscuration.h"
 
 int main(int argc, char* argv[])
 {
