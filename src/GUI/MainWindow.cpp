@@ -6,6 +6,7 @@
 #include <opencv2/imgproc.hpp>
 #include "Commands.h"
 #include "obscuration.h"
+#include "ToolWindow.h"
 
 using namespace std::placeholders;
 namespace fs = std::filesystem;
@@ -105,6 +106,14 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 {
     if(!image_label->underMouse()) return;
     auto coords = image_label->mapFrom(this, event->pos());
+}
+
+void MainWindow::on_tools_action_triggered()
+{
+    ToolWindow* tw = new ToolWindow();
+    tw->setAttribute(Qt::WA_DeleteOnClose);
+    tw->setAttribute(Qt::WA_QuitOnClose, false);
+    tw->show();
 }
 
 void MainWindow::on_open_action_triggered()

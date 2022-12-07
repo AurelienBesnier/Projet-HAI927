@@ -5,6 +5,8 @@
 #include <fstream>
 #include <random>
 #include <algorithm>
+#include <cmath>
+
 
 namespace
 {
@@ -23,7 +25,7 @@ namespace
         return Item{std::move(name), std::move(index)};
     }
 
-    std::vector<Triplet> genFromPairs(std::filesystem::path folder, std::filesystem::path pairFile)
+    std::vector<Triplet> genFromPairs(std::filesystem::path folder, std::filesystem::path pairFile, int n = 0)
     {
         std::ifstream file(pairFile);
         int size;
@@ -46,7 +48,9 @@ namespace
             file >> name;
             file >> index;
         }
-        std::ranges::shuffle(others, std::mt19937(std::random_device{}()));
+        auto rng = std::mt19937(std::random_device{}());
+        std::ranges::shuffle(result, rng);
+        std::ranges::shuffle(others, rng);
         name_it = names.begin();
         for(Triplet& triplet : result)
         {
@@ -56,6 +60,7 @@ namespace
             triplet.negative = buildItem(folder, other_it->first, other_it->second);
             others.erase(other_it.base()-1);
         }
+        if(n) result.resize(std::min<int>(n, result.size()));
         return result;
     }
 
@@ -135,8 +140,9 @@ namespace
         }
     }
 
-    void writePairs(std::ostream& output, std::vector<Triplet> triplets, int n)
+    void writePairs(std::ostream& output, std::vector<Triplet> triplets)
     {
+        int n = triplets.size();
         output << n << std::endl;
         
         unsigned int cpt = 0;
@@ -169,17 +175,17 @@ void genTripletDataset(std::ostream& output, std::filesystem::path folder, int n
     writeTriplets(output, genNTriplets(folder, n));
 }
 
-void genTripletDataset(std::ostream& output, std::filesystem::path folder, std::filesystem::path pairFile)
+void genTripletDataset(std::ostream& output, std::filesystem::path folder, std::filesystem::path pairFile, int n)
 {
-    writeTriplets(output, genFromPairs(folder, pairFile));
+    writeTriplets(output, genFromPairs(folder, pairFile, n));
 }
 
 void genPairDataset(std::ostream& output, std::filesystem::path folder, int n)
 {
-    writePairs(output, genNTriplets(folder, n), n);
+    writePairs(output, genNTriplets(folder, n));
 }
 
 void genPairDataset(std::ostream& output, std::filesystem::path folder, std::filesystem::path pairFile, int n)
 {
-    writePairs(output, genFromPairs(folder, pairFile), n);
+    writePairs(output, genFromPairs(folder, pairFile, n));
 }

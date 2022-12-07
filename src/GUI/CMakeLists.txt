@@ -6,11 +6,17 @@ set(PROJECT_SOURCES
     MainWindow.cpp
     MainWindow.ui
     Commands.cpp
+    FileSelector.cpp
+    FileSelector.ui
+    ToolWindow.cpp
+    ToolWindow.ui
 )
 
 set(PROJECT_HEADERS
     MainWindow.h
     Commands.h
+    FileSelector.h
+    ToolWindow.h
 )
 
 find_package( OpenCV REQUIRED )
@@ -27,4 +33,4 @@ set_target_properties(${PROJECT_NAME}
         CXX_EXTENSIONS NO
 )
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} Qt5::Widgets fdeep Obscuration)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} Qt5::Widgets fdeep Obscuration Tools)

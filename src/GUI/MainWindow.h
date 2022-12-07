@@ -24,6 +24,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override;
 
 private slots:
+    void on_tools_action_triggered();
     void on_open_action_triggered();
     void on_save_action_triggered();
     void on_evaluate_button_pressed();

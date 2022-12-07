@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>GUI</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -78,6 +78,8 @@
     </property>
     <addaction name="zoom_in_action"/>
     <addaction name="zoom_out_action"/>
+    <addaction name="separator"/>
+    <addaction name="tools_action"/>
    </widget>
    <widget class="QMenu" name="edit_menu">
     <property name="title">
@@ -340,6 +342,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="tools_action">
+   <property name="text">
+    <string>Open tools</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
  </widget>
