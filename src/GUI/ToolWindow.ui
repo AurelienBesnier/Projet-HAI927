@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>735</width>
+    <width>966</width>
     <height>269</height>
    </rect>
   </property>
@@ -95,7 +95,11 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="obscuration_edit"/>
+          <widget class="QLineEdit" name="obscuration_edit">
+           <property name="text">
+            <string notr="true">noop blur 25 pixel 25 blackhead</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_6">
@@ -107,10 +111,20 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="1" column="2">
+          <widget class="QCheckBox" name="random_checkbox">
+           <property name="text">
+            <string>Random</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2">
           <widget class="FileSelector" name="result_folder_selector"/>
          </item>
-         <item row="2" column="0" colspan="2">
+         <item row="2" column="0" colspan="3">
           <widget class="QPushButton" name="obscurate_button">
            <property name="enabled">
             <bool>false</bool>
@@ -195,6 +209,19 @@
    </slots>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>lfw_selector</tabstop>
+  <tabstop>pairs_selector</tabstop>
+  <tabstop>dataset_selector</tabstop>
+  <tabstop>count_spinbox</tabstop>
+  <tabstop>genpairs_button</tabstop>
+  <tabstop>gentriplets_button</tabstop>
+  <tabstop>annotate_button</tabstop>
+  <tabstop>result_folder_selector</tabstop>
+  <tabstop>obscuration_edit</tabstop>
+  <tabstop>random_checkbox</tabstop>
+  <tabstop>obscurate_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

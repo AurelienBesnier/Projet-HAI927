@@ -20,11 +20,9 @@ namespace
     namespace fs = std::filesystem;
     using MethodSet = std::vector<std::pair<std::function<void(cv::Mat&, cv::Rect)>, std::string>>;
 
-    std::vector<cv::Mat> applyRandomMethod(std::ostream& output, const MethodSet& methods, std::vector<fs::path> from)
+    std::vector<cv::Mat> applyMethod(std::ostream& output, const MethodSet& methods, int index, const std::vector<fs::path>& from)
     {
-        static std::mt19937 gen(std::random_device{}());
-        static std::uniform_int_distribution dist;
-        auto& [method, name] = methods[dist(gen, std::uniform_int_distribution<int>::param_type{0, methods.size()-1})];
+        auto& [method, name] = methods[index];
         std::vector<cv::Mat> result(from.size());
         std::ranges::transform(from, result.begin(), [&](fs::path p) {
             auto [img, loc] = loadFaceWithLoc(p);
@@ -35,18 +33,26 @@ namespace
         return result;
     }
 
-    void generateObscurations(std::ostream& output, fs::path filename, fs::path from_folder, fs::path to_folder, const MethodSet& methods)
+    std::vector<cv::Mat> applyRandomMethod(std::ostream& output, const MethodSet& methods, const std::vector<fs::path>& from)
+    {
+        static std::mt19937 gen(std::random_device{}());
+        static std::uniform_int_distribution dist;
+        return applyMethod(output, methods, dist(gen, std::uniform_int_distribution<int>::param_type{0, methods.size()-1}), from);
+    }
+
+    void generateObscurations(std::ostream& output, fs::path filename, fs::path from_folder, fs::path to_folder, const MethodSet& methods, bool random)
     {
         std::ifstream file(filename);
-        std::string count;
-        file >> count; file.ignore(std::numeric_limits<std::streamsize>::max(), file.widen('\n'));
-        output << count << '\n';
+        int n;
+        file >> n; file.ignore(std::numeric_limits<std::streamsize>::max(), file.widen('\n'));
+        output << n << '\n';
+        int n_size = std::to_string(n).size();
         int id = 0;
         std::string val;
         while(getline(file, val) && !val.empty())
         {
             std::string local_id = std::to_string(id++);
-            local_id.insert(0, count.size() - local_id.size(), '0');
+            local_id.insert(0, n_size - local_id.size(), '0');
 
             std::stringstream line(std::move(val)); line.exceptions(std::ios::badbit | std::ios::failbit);
             std::string last_name;
@@ -77,7 +83,8 @@ namespace
                 output << "t ";
             else
                 output << other_images.size() << ' ';
-            std::vector<cv::Mat> transformed = applyRandomMethod(output, methods, other_images);
+            std::vector<cv::Mat> transformed = random?
+                applyRandomMethod(output, methods, other_images) : applyMethod(output, methods, (id-1) * methods.size() / n, other_images);
             if(transformed.size() == 1)
             {
                 cv::Mat img;
@@ -96,7 +103,7 @@ namespace
 }
 
 void obscureDataSet(std::ostream& output, std::filesystem::path dataset, std::filesystem::path from_folder, std::filesystem::path to_folder,
-    const std::vector<std::string>& method_descriptor)
+    const std::vector<std::string>& method_descriptor, bool random)
 {
     std::unordered_map<std::string, int> method_names{
         {"noop", 1},
@@ -136,5 +143,5 @@ void obscureDataSet(std::ostream& output, std::filesystem::path dataset, std::fi
             throw std::invalid_argument("Unknown method name");
         }
     }
-    generateObscurations(output, dataset, from_folder, to_folder, methods);
+    generateObscurations(output, dataset, from_folder, to_folder, methods, random);
 }

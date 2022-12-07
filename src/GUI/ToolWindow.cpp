@@ -92,9 +92,10 @@ void ToolWindow::on_obscurate_button_clicked()
     path lfw = lfw_selector->path().toStdString();
     path dataset = dataset_selector->path().toStdString();
     path result = result_folder_selector->path().toStdString();
+    bool random = random_checkbox->isChecked();
 
     runTask([=, output = std::move(output)]() mutable {
-        obscureDataSet(output, dataset, lfw, result, desc);
+        obscureDataSet(output, dataset, lfw, result, desc, random);
     });
 }
 
