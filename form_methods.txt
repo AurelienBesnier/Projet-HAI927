@@ -1,0 +1,221 @@
+220
+0 blackhead
+1 noop
+1 blackhead
+0 blackhead
+0 blur 12
+0 blackhead
+0 noop
+0 noop
+1 blur 12
+1 blackhead
+0 noop
+1 pixel 12
+1 noop
+0 blur 12
+0 noop
+1 blackhead
+1 noop
+1 blur 12
+1 blackhead
+1 noop
+1 noop
+0 pixel 12
+0 blur 12
+1 blur 12
+1 blur 12
+1 blackhead
+1 pixel 12
+0 blur 12
+1 pixel 12
+0 blackhead
+1 blur 12
+1 pixel 12
+0 pixel 12
+0 noop
+1 pixel 12
+0 pixel 12
+1 noop
+0 blur 12
+1 blur 12
+0 pixel 12
+0 blur 12
+1 pixel 12
+1 pixel 12
+1 pixel 12
+1 noop
+1 blackhead
+1 noop
+1 blackhead
+0 blackhead
+0 blackhead
+0 blackhead
+1 blur 12
+0 pixel 12
+1 noop
+0 pixel 12
+0 pixel 12
+1 blur 12
+1 blackhead
+1 noop
+1 blur 12
+1 noop
+0 noop
+0 noop
+1 blur 12
+1 blur 12
+1 noop
+1 blackhead
+0 blur 12
+1 pixel 12
+1 blackhead
+0 blur 12
+1 pixel 12
+0 blackhead
+1 pixel 12
+1 pixel 12
+0 noop
+0 pixel 12
+1 pixel 12
+1 blackhead
+1 blur 12
+0 blackhead
+0 pixel 12
+0 pixel 12
+1 blur 12
+0 pixel 12
+1 pixel 12
+1 blur 12
+1 pixel 12
+0 noop
+0 blur 12
+0 blackhead
+1 blackhead
+1 noop
+0 noop
+0 pixel 12
+0 pixel 12
+0 blur 12
+1 noop
+1 pixel 12
+0 pixel 12
+0 pixel 12
+0 noop
+1 noop
+0 blur 12
+0 blackhead
+1 blackhead
+0 pixel 12
+1 blur 12
+1 blackhead
+1 blur 12
+1 blackhead
+1 noop
+1 pixel 12
+1 noop
+0 blur 12
+0 blur 12
+1 pixel 12
+0 blackhead
+1 noop
+1 pixel 12
+1 pixel 12
+1 pixel 12
+0 blur 12
+1 noop
+1 blur 12
+1 pixel 12
+1 pixel 12
+0 blur 12
+1 pixel 12
+0 noop
+1 noop
+0 noop
+0 pixel 12
+1 pixel 12
+1 blackhead
+1 blackhead
+1 noop
+0 blur 12
+0 blur 12
+1 blur 12
+0 noop
+0 blur 12
+1 blur 12
+1 pixel 12
+1 blackhead
+0 pixel 12
+0 noop
+1 blackhead
+1 noop
+0 blackhead
+1 blackhead
+1 pixel 12
+1 blur 12
+0 blur 12
+0 noop
+1 blur 12
+0 blur 12
+1 blackhead
+0 blackhead
+0 pixel 12
+0 noop
+0 pixel 12
+1 blackhead
+0 blur 12
+0 noop
+1 pixel 12
+0 blackhead
+0 pixel 12
+1 blackhead
+1 blur 12
+1 blur 12
+0 blackhead
+0 pixel 12
+1 pixel 12
+0 pixel 12
+1 pixel 12
+0 blackhead
+0 noop
+0 pixel 12
+0 noop
+0 blur 12
+0 blackhead
+1 blackhead
+1 pixel 12
+0 pixel 12
+1 blur 12
+0 blur 12
+1 noop
+1 pixel 12
+1 noop
+0 pixel 12
+1 blur 12
+0 noop
+0 blur 12
+0 blackhead
+0 pixel 12
+0 pixel 12
+0 blur 12
+0 blur 12
+1 noop
+0 pixel 12
+1 blackhead
+0 blur 12
+1 pixel 12
+1 blackhead
+1 blackhead
+0 noop
+0 noop
+1 blackhead
+0 pixel 12
+1 blackhead
+1 blackhead
+0 pixel 12
+0 noop
+0 pixel 12
+0 noop
+1 blackhead
+1 blackhead
+1 blur 12
+1 noop
