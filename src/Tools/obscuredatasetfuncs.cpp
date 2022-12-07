@@ -20,15 +20,19 @@ namespace
     namespace fs = std::filesystem;
     using MethodSet = std::vector<std::pair<std::function<void(cv::Mat&, cv::Rect)>, std::string>>;
 
-    cv::Mat applyRandomMethod(std::ostream& output, fs::path from, const MethodSet& methods)
+    std::vector<cv::Mat> applyRandomMethod(std::ostream& output, const MethodSet& methods, std::vector<fs::path> from)
     {
         static std::mt19937 gen(std::random_device{}());
         static std::uniform_int_distribution dist;
-        auto [img, loc] = loadFaceWithLoc(from);
         auto& [method, name] = methods[dist(gen, std::uniform_int_distribution<int>::param_type{0, methods.size()-1})];
-        method(img, loc);
+        std::vector<cv::Mat> result(from.size());
+        std::ranges::transform(from, result.begin(), [&](fs::path p) {
+            auto [img, loc] = loadFaceWithLoc(p);
+            method(img, loc);
+            return img;
+        });
         output << name << '\n';
-        return img;
+        return result;
     }
 
     void generateObscurations(std::ostream& output, fs::path filename, fs::path from_folder, fs::path to_folder, const MethodSet& methods)
@@ -50,23 +54,43 @@ namespace
             std::string index;
             line >> index;
             index.insert(0, 4 - index.size(), '0');
-            cv::Mat left = cv::imread(from_folder / last_name / (last_name + '_' + index + ".jpg"));
+            cv::Mat anchor = cv::imread(from_folder / last_name / (last_name + '_' + index + ".jpg"));
 
+            std::vector<fs::path> other_images;
             bool same = true;
-            line >> val;
-            if(!isNumber(val))
+            while(line.good() && (line >> std::ws).good())
             {
-                same = val == last_name;
-                last_name = std::move(val);
                 line >> val;
+                if(!isNumber(val))
+                {
+                    same &= val == last_name;
+                    last_name = std::move(val);
+                    line >> val;
+                }
+                index = std::move(val);
+                index.insert(0, 4 - index.size(), '0');
+                other_images.push_back(from_folder / last_name / (last_name + '_' + index + ".jpg"));
             }
-            index = std::move(val);
-            index.insert(0, 4 - index.size(), '0');
-            output << same << ' ';
-            cv::Mat right = applyRandomMethod(output, from_folder / last_name / (last_name + '_' + index + ".jpg"), methods);
-            cv::Mat img;
-            cv::hconcat(left, right, img);
-            cv::imwrite(to_folder / (local_id + ".jpg"), img);
+            if(other_images.size() == 1)
+                output << same << ' ';
+            else if(other_images.size() == 2)
+                output << "t ";
+            else
+                output << other_images.size() << ' ';
+            std::vector<cv::Mat> transformed = applyRandomMethod(output, methods, other_images);
+            if(transformed.size() == 1)
+            {
+                cv::Mat img;
+                cv::hconcat(anchor, transformed[0], img);
+                cv::imwrite(to_folder / (local_id + ".jpg"), img);
+            }
+            else
+            {
+                int i = 0;
+                cv::imwrite(to_folder / (local_id + '_' + std::to_string(i++) + ".jpg"), anchor);
+                for(auto& img : transformed)
+                    cv::imwrite(to_folder / (local_id + '_' + std::to_string(i++) + ".jpg"), img);
+            }
         }
     }
 }
