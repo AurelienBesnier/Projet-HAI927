@@ -1,0 +1,7 @@
+#!/bin/sh
+mkdir -p triplets_large
+mkdir -p triplets_large_test
+./ObscureDataSet ${CMAKE_SOURCE_DIR}/../lfw/triplets_large.txt ${CMAKE_SOURCE_DIR}/../lfw ./triplets_large noop blur 25 pixel 25 blackhead > triplets_large.txt
+./ObscureDataSet ${CMAKE_SOURCE_DIR}/../lfw/triplets_large_test.txt ${CMAKE_SOURCE_DIR}/../lfw ./triplets_large_test noop blur 25 pixel 25 blackhead > triplets_large_test.txt
+python3 Classification.py
+python3 ${frugally_deep_SOURCE_DIR}/keras_export/convert_model.py model_trained.h5 model_trained.json

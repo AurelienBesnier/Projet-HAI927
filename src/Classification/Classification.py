@@ -10,12 +10,14 @@
 
 import os
 #Disable GPU
-#os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 import tensorflow as tf
+import sys
+import glob
 from pathlib import Path
 from tensorflow.keras import applications
 from tensorflow.keras import layers
@@ -32,14 +34,6 @@ target_shape = (250, 250)
 # #### Importing dataset
 
 # In[2]:
-
-
-cache_dir = Path().resolve() / "../../lfw"
-
-print(cache_dir)
-
-
-# In[3]:
 
 
 def preprocess_image(filename):
@@ -68,25 +62,27 @@ def preprocess_triplets(anchor, positive, negative):
     )
 
 
-# In[4]:
+# In[7]:
 
 
-def buildImageName(name, index):
-    return tf.compat.path_to_str(cache_dir / name / (name + "_" + "0" * (4 - len(index)) + index + ".jpg"))
+path_root = "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+path_root = Path("../../build/bin" if path_root[0] == '$' else path_root).resolve()
+print(path_root)
 
-def loadDataset(filename):
-    with open(cache_dir / filename, "r") as file:
-        raw_triplets = [line.split() for line in file]
 
+# In[8]:
+
+
+def loadDataset(folder):
     anchor_images = []
     positive_images = []
     negative_images = []
-
-    raw_triplets.pop(0)
-    for raw_triplet in raw_triplets:
-        anchor_images.append(buildImageName(raw_triplet[0], raw_triplet[1]))
-        positive_images.append(buildImageName(raw_triplet[0], raw_triplet[2]))
-        negative_images.append(buildImageName(raw_triplet[3], raw_triplet[4]))
+    
+    filelist = sorted(filter(os.path.isfile, glob.glob(str(folder / '*'))))
+    for i in range(0, len(filelist), 3):
+        anchor_images.append(filelist[i])
+        positive_images.append(filelist[i+1])
+        negative_images.append(filelist[i+2])
 
     anchor_dataset = tf.data.Dataset.from_tensor_slices(anchor_images)
     positive_dataset = tf.data.Dataset.from_tensor_slices(positive_images)
@@ -98,35 +94,63 @@ def loadDataset(filename):
     return dataset
 
 # Let's now split our dataset in train and validation.
-train_dataset = loadDataset("triplets.txt")
-val_dataset = loadDataset("triplets_test.txt")
+train_dataset = loadDataset(path_root / "triplets_large")
+val_dataset = loadDataset(path_root / "triplets_large_test")
 
 train_dataset = train_dataset.batch(32, drop_remainder=False)
-train_dataset = train_dataset.prefetch(8)
+train_dataset = train_dataset.prefetch(16)
 
 val_dataset = val_dataset.batch(32, drop_remainder=False)
-val_dataset = val_dataset.prefetch(8)
+val_dataset = val_dataset.prefetch(16)
+
+
+# In[9]:
+
+
+def visualize(anchor, positive, negative):
+    """Visualize a few triplets from the supplied batches."""
+
+    def show(ax, image):
+        ax.imshow(image)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+    fig = plt.figure(figsize=(9, 9))
+
+    axs = fig.subplots(3, 3)
+    for i in range(3):
+        show(axs[i, 0], anchor[i])
+        show(axs[i, 1], positive[i])
+        show(axs[i, 2], negative[i])
+
+
+visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
 
 
 # ## Setting up the model
 
 # ### Generator model
 
-# In[6]:
+# In[ ]:
 
 
-base_cnn = tf.keras.applications.InceptionV3(
+base_cnn = inception_v3.InceptionV3(
     include_top=False,
     weights="imagenet",
     input_shape=target_shape + (3,)
 )
 
 flatten = layers.Flatten()(base_cnn.output)
-dense1 = layers.Dense(512, activation="relu")(flatten)
+
+dense1 = layers.Dense(256, activation="relu")(flatten)
 dense1 = layers.BatchNormalization()(dense1)
-dense2 = layers.Dense(256, activation="relu")(dense1)
+dropout1 = layers.Dropout(0.3)(dense1)
+
+dense2 = layers.Dense(128, activation="relu")(dropout1)
 dense2 = layers.BatchNormalization()(dense2)
-output = layers.Dense(256)(dense2)
+dropout2 = layers.Dropout(0.3)(dense2)
+
+output = layers.Dense(64)(dropout2)
 
 embedding = Model(base_cnn.input, output, name="Embedding")
 
@@ -136,7 +160,7 @@ for layer in base_cnn.layers:
 
 # ### Siamese network
 
-# In[7]:
+# In[ ]:
 
 
 class DistanceLayer(layers.Layer):
@@ -170,7 +194,7 @@ siamese_network = Model(
 )
 
 
-# In[8]:
+# In[ ]:
 
 
 class SiameseModel(Model):
@@ -239,24 +263,56 @@ class SiameseModel(Model):
         return [self.loss_tracker]
 
 
-# In[10]:
+# In[ ]:
 
 
 siamese_model = SiameseModel(siamese_network)
-siamese_model.compile(optimizer=optimizers.Adam(0.0001), weighted_metrics=["loss"])
+siamese_model.compile(optimizer=optimizers.SGD(learning_rate=0.0001), weighted_metrics=["loss"])
 siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 
 
 # In[ ]:
 
 
+siamese_model.metrics_names
+plt.plot(siamese_model.history.history['loss'])
+plt.plot(siamese_model.history.history['val_loss'])
+plt.title('model_loss')
+plt.xlabel('epoch')
+plt.ylabel('loss')
+plt.ylim(0, 1)
+plt.legend(['loss', 'val_loss'], loc='upper right')
+
+plt.show()
+
+
+# In[ ]:
+
+
+sample = next(iter(val_dataset))
+visualize(*sample)
+
+anchor, positive, negative = sample
+anchor_embedding, positive_embedding, negative_embedding = (
+    embedding(inception_v3.preprocess_input(anchor)),
+    embedding(inception_v3.preprocess_input(positive)),
+    embedding(inception_v3.preprocess_input(negative)),
+)
+
+
+# In[ ]:
+
+
 cosine_similarity = metrics.CosineSimilarity()
+mean = metrics.Mean()
 
 positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
 print("Positive similarity:", positive_similarity.numpy())
+print("Positive distance:", mean(tf.reduce_sum(tf.square(anchor_embedding - positive_embedding), -1)).numpy())
 
 negative_similarity = cosine_similarity(anchor_embedding, negative_embedding)
-print("Negative similarity", negative_similarity.numpy())
+print("Negative similarity:", negative_similarity.numpy())
+print("Negative distance:", mean(tf.reduce_sum(tf.square(anchor_embedding - negative_embedding), -1)).numpy())
 
 
 # ### Saving the model
@@ -264,11 +320,11 @@ print("Negative similarity", negative_similarity.numpy())
 # In[ ]:
 
 
-embedding.save("model_trained")
+embedding.save("model_trained.h5", include_optimizer=False)
 
 
 # In[ ]:
 
 
-reconstructed_model = tf.keras.models.load_model("model_trained")
+reconstructed_model = tf.keras.models.load_model("model_trained.h5")
 

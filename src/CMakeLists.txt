@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.12)
 project (HAI927)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 include(FetchContent)
 FetchContent_Declare(
@@ -22,3 +22,6 @@ add_subdirectory(Faceloc)
 add_subdirectory(Obscuration)
 add_subdirectory(Tools)
 add_subdirectory(GUI)
+
+configure_file(Classification/Classification.py bin/Classification.py)
+configure_file(build_model.sh.in bin/build_model.sh)
