@@ -44,7 +44,10 @@ namespace
     {
         std::ifstream file(filename);
         int n;
-        file >> n; file.ignore(std::numeric_limits<std::streamsize>::max(), file.widen('\n'));
+        file >> n;
+        if(!file) throw std::runtime_error("Badly formatted or inaccessible file");
+
+        file.ignore(std::numeric_limits<std::streamsize>::max(), file.widen('\n'));
         output << n << '\n';
         int n_size = std::to_string(n).size();
         int id = 0;
