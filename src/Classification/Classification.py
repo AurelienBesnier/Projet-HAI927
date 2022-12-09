@@ -5,7 +5,7 @@
 
 # ### Imports
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -33,7 +33,7 @@ target_shape = (250, 250)
 
 # #### Importing dataset
 
-# In[2]:
+# In[ ]:
 
 
 def preprocess_image(filename):
@@ -44,7 +44,6 @@ def preprocess_image(filename):
 
     image_string = tf.io.read_file(filename)
     image = tf.image.decode_jpeg(image_string, channels=3)
-    image = tf.image.convert_image_dtype(image, tf.float32)
     image = tf.image.resize(image, target_shape)
     return image
 
@@ -62,7 +61,7 @@ def preprocess_triplets(anchor, positive, negative):
     )
 
 
-# In[7]:
+# In[ ]:
 
 
 path_root = "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
@@ -70,7 +69,7 @@ path_root = Path("../../build/bin" if path_root[0] == '$' else path_root).resolv
 print(path_root)
 
 
-# In[8]:
+# In[ ]:
 
 
 def loadDataset(folder):
@@ -102,29 +101,6 @@ train_dataset = train_dataset.prefetch(16)
 
 val_dataset = val_dataset.batch(32, drop_remainder=False)
 val_dataset = val_dataset.prefetch(16)
-
-
-# In[9]:
-
-
-def visualize(anchor, positive, negative):
-    """Visualize a few triplets from the supplied batches."""
-
-    def show(ax, image):
-        ax.imshow(image)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-
-    fig = plt.figure(figsize=(9, 9))
-
-    axs = fig.subplots(3, 3)
-    for i in range(3):
-        show(axs[i, 0], anchor[i])
-        show(axs[i, 1], positive[i])
-        show(axs[i, 2], negative[i])
-
-
-visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
 
 
 # ## Setting up the model
@@ -267,7 +243,7 @@ class SiameseModel(Model):
 
 
 siamese_model = SiameseModel(siamese_network)
-siamese_model.compile(optimizer=optimizers.SGD(learning_rate=0.0001), weighted_metrics=["loss"])
+siamese_model.compile(optimizer=optimizers.Adam(learning_rate=0.000001), weighted_metrics=[])
 siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 
 
@@ -290,7 +266,6 @@ plt.show()
 
 
 sample = next(iter(val_dataset))
-visualize(*sample)
 
 anchor, positive, negative = sample
 anchor_embedding, positive_embedding, negative_embedding = (
@@ -304,15 +279,26 @@ anchor_embedding, positive_embedding, negative_embedding = (
 
 
 cosine_similarity = metrics.CosineSimilarity()
-mean = metrics.Mean()
 
 positive_similarity = cosine_similarity(anchor_embedding, positive_embedding)
 print("Positive similarity:", positive_similarity.numpy())
-print("Positive distance:", mean(tf.reduce_sum(tf.square(anchor_embedding - positive_embedding), -1)).numpy())
-
 negative_similarity = cosine_similarity(anchor_embedding, negative_embedding)
 print("Negative similarity:", negative_similarity.numpy())
-print("Negative distance:", mean(tf.reduce_sum(tf.square(anchor_embedding - negative_embedding), -1)).numpy())
+
+
+mean_pos = metrics.Mean()
+mean_neg = metrics.Mean()
+
+for anchor, positive, negative in val_dataset:
+    anchor_embedding, positive_embedding, negative_embedding = (
+        embedding(inception_v3.preprocess_input(anchor)),
+        embedding(inception_v3.preprocess_input(positive)),
+        embedding(inception_v3.preprocess_input(negative)),
+    )
+    mean_pos.update_state(tf.reduce_sum(tf.square(anchor_embedding - positive_embedding), -1))
+    mean_neg.update_state(tf.reduce_sum(tf.square(anchor_embedding - negative_embedding), -1))
+print("Positive distance:", mean_pos.result().numpy())
+print("Negative distance:", mean_neg.result().numpy())
 
 
 # ### Saving the model
@@ -326,5 +312,11 @@ embedding.save("model_trained.h5", include_optimizer=False)
 # In[ ]:
 
 
-reconstructed_model = tf.keras.models.load_model("model_trained.h5")
+embedding = tf.keras.models.load_model("model_trained.h5")
+
+
+# In[ ]:
+
+
+
 
