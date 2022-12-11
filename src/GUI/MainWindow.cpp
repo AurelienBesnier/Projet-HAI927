@@ -16,9 +16,10 @@ namespace
 {
     auto asTensor(const cv::Mat& img)
     {
-        cv::Mat copy;
-        cv::resize(img, copy, cv::Size(250, 250));
-        return fdeep::tensor_from_bytes(copy.ptr(), copy.rows, copy.cols, copy.channels());
+        cv::Mat resized, converted;
+        cv::resize(img, resized, cv::Size(250, 250));
+        cv::cvtColor(resized, converted, cv::COLOR_BGR2RGB);
+        return fdeep::tensor_from_bytes(converted.ptr(), converted.rows, converted.cols, converted.channels(), -1.0f, 1.0f);
     }
 
     float squared(float x) { return x*x; }
@@ -136,7 +137,7 @@ void MainWindow::on_save_action_triggered()
     cv::imwrite(path, _img);
 }
 
-void MainWindow::on_evaluate_button_pressed()
+void MainWindow::on_evaluate_button_clicked()
 {
     fs::path path = QFileDialog::getOpenFileName(this, tr("Open image for comparison"), "", tr("Image Files (*.png *.jpg *.bmp)")).toStdString();
     if(path.empty()) return;
@@ -145,14 +146,19 @@ void MainWindow::on_evaluate_button_pressed()
         _model->predict({asTensor(_img)})[0],
         _model->predict({asTensor(img)})[0],
     };
-    float distance = 0;
+    double distance = 0;
     int n = result[0].as_vector()->size();
     for(int i = 0; i < n; ++i)
     {
         distance += squared((*result[0].as_vector())[i] - (*result[1].as_vector())[i]);
     }
-    distance = sqrt(distance);
     distance_label->setText(QString::number(distance));
+
+    const double positive_distance = 36.96293;
+    const double negative_distance = 45.819515;
+    if(distance <= positive_distance) security_label->setText(tr("None"));
+    else if(distance >= negative_distance) security_label->setText(tr("Excellent"));
+    else security_label->setText(QString::number((distance - positive_distance) / (negative_distance - positive_distance) * 100) + '%');
 }
 
 void MainWindow::on_zoom_in_action_triggered()
@@ -168,17 +174,17 @@ void MainWindow::on_zoom_out_action_triggered()
 }
 
 
-void MainWindow::on_blur_button_pressed()
+void MainWindow::on_blur_button_clicked()
 {
     _undo_stack->push(new FilterCommand(this, std::bind(blur, _1, _selection, blur_slider->value())));
 }
 
-void MainWindow::on_pixel_button_pressed()
+void MainWindow::on_pixel_button_clicked()
 {
     _undo_stack->push(new FilterCommand(this, std::bind(pixel, _1, _selection, pixel_slider->value())));
 }
 
-void MainWindow::on_blackhead_button_pressed()
+void MainWindow::on_blackhead_button_clicked()
 {
     _undo_stack->push(new FilterCommand(this, std::bind(blackhead, _1, _selection)));
 }

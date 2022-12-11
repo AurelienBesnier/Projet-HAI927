@@ -27,12 +27,12 @@ private slots:
     void on_tools_action_triggered();
     void on_open_action_triggered();
     void on_save_action_triggered();
-    void on_evaluate_button_pressed();
+    void on_evaluate_button_clicked();
     void on_zoom_in_action_triggered();
     void on_zoom_out_action_triggered();
-    void on_blur_button_pressed();
-    void on_pixel_button_pressed();
-    void on_blackhead_button_pressed();
+    void on_blur_button_clicked();
+    void on_pixel_button_clicked();
+    void on_blackhead_button_clicked();
     void handleModelLoaded();
 
 signals:
